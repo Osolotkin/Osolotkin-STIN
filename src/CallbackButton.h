@@ -1,4 +1,5 @@
 #pragma once
+
 #include "Button.h"
 
 struct CallbackButton {
@@ -19,6 +20,7 @@ struct CallbackButton {
 
 	int borderColor;
 
+	/* supposed to return 1 or 0 */
 	int (*callback) (void);
 
 	int (*select) (struct CallbackButton* button, POINT* coords);

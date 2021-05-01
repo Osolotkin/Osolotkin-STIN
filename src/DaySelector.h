@@ -36,8 +36,11 @@ typedef struct DaySelector {
 
 	time_t startTime;
 
+	/* number of the current page, min val 1 */
 	int page;
+	/* number of the last page, min val 1*/
 	int lastPage;
+	/* total days count */
 	int days;
 
 	int color;
@@ -46,9 +49,11 @@ typedef struct DaySelector {
 	int selectedColor;
 	int selectedBackColor;
 
+	/* number of selected on current page, min val 1, max val itemsPerPage*/
 	int selected;
 
 	int itemsPerPage;
+	/* also contains scroll buttons at fisrt and last indexes */
 	DayButton* buttons;
 
 	int visible;

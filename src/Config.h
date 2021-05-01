@@ -2,8 +2,10 @@
 
 #include "Colors.h"
 
-#define SCREEN_WIDTH 800
-#define SCREEN_HEIGHT 640
+extern int CZECHIA_INDEX;
+
+extern int SCREEN_WIDTH;
+extern int SCREEN_HEIGHT;
 
 #define COLOR_MAIN_FRONT WHITE
 #define COLOR_MAIN_BACK BLACK
@@ -15,4 +17,6 @@
 
 #define COUNTRIES_TO_SELECT 4
 
-extern const Color graphColors[];
+extern const Color GRAPH_COLORS[];
+
+int loadConfig();

@@ -6,7 +6,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-
+/*
+*	finds max value in given array
+*/
 int maxIntArray(int* array, int length) {
 
 	int max = 0;
@@ -17,7 +19,9 @@ int maxIntArray(int* array, int length) {
 
 }
 
-// https://stackoverflow.com/questions/1306727/way-to-get-number-of-digits-in-an-int
+/* 
+*	https://stackoverflow.com/questions/1306727/way-to-get-number-of-digits-in-an-int 
+*/
 int getNumberOfDigits(int number) {
 
     if (number < 100000) {
@@ -55,14 +59,19 @@ int getNumberOfDigits(int number) {
 
 }
 
-// https://stackoverflow.com/questions/46983772/fastest-way-to-obtain-a-power-of-10
+/* 
+*	https://stackoverflow.com/questions/46983772/fastest-way-to-obtain-a-power-of-10
+*/
 const int POWERS_OF_10[] = { 1, 10, 100, 1000, 10000, 100000, 1000000, 10000000, 100000000, 1000000000 };
 int powerOfTen(int pow) {
     return POWERS_OF_10[pow];
 }
 
-// is designed to use just for two chars, no tests included
-// assuming that char size is 16 bits
+/*
+*	is designed to use just for two chars, no tests included
+*	assuming that char size is 16 bits
+*	returns index of the first occurence, -1 if nothing founc
+*/
 int bitwiseFind(char* array, int arrLen, char* del, int offset) {
 
     const int pattern = (del[0] << 16) | del[1];
@@ -79,6 +88,12 @@ int bitwiseFind(char* array, int arrLen, char* del, int offset) {
 
 }
 
+/*
+*	wide char function
+*	is designed to use just for two chars, no tests included
+*	assuming that char size is 16 bits
+*	returns index of the first occurence, -1 if nothing founc
+*/
 int bitwiseFindW(wchar_t* array, int arrLen, wchar_t* del, int offset) {
 
     const int pattern = (del[0] << 16) | del[1];
@@ -95,6 +110,11 @@ int bitwiseFindW(wchar_t* array, int arrLen, wchar_t* del, int offset) {
 
 }
 
+/*
+*	compares strings from behind
+*	returns 1 if text, with applied offset was ends with 
+*	otherwise 0
+*/
 int backwardCompare(char* text, int tLen, char* pattern, int pLen, int offset) {
 
     if (pLen > offset || tLen < pLen) return 0;
@@ -108,6 +128,12 @@ int backwardCompare(char* text, int tLen, char* pattern, int pLen, int offset) {
 
 }
 
+/*
+*	wide char function 
+*	compares strings from behind
+*	returns 1 if text, with applied offset was ends with 
+*	otherwise 0
+*/
 int backwardCompareW(wchar_t* text, int tLen, wchar_t* pattern, int pLen, int offset) {
 
     if (pLen > offset || tLen < pLen) return 0;
@@ -121,10 +147,13 @@ int backwardCompareW(wchar_t* text, int tLen, wchar_t* pattern, int pLen, int of
 
 }
 
+/*
+*	parse given datatime as null-terminated string in format YYYY-MM-DD-HH-MM-SS
+*	returns parsed date time into given buffer of struct tm
+*/
 void parseDateTime(char* zTime, int len, struct tm* dateTime) {
 
     if (len < 20) {
-        dateTime = localtime(time(NULL));
         return;
     };
 
@@ -152,23 +181,18 @@ void parseDateTime(char* zTime, int len, struct tm* dateTime) {
     tmp += 3;
     zTime[19] = '\0';
     dateTime->tm_sec = strtol(tmp, NULL, 10);
-
-    tmp += 3;
-
-    char sign = *tmp;
-    char* hrsStr = tmp + 1; hrsStr[2] = '\0';
-    char* minStr = tmp + 4;
-
-    int zHrs = strtol(hrsStr, NULL, 10);
-    int zMin = strtol(minStr, NULL, 10);
-
-    return &dateTime;
+	
 }
 
-struct tm* parseDateTimeW(wchar_t* zTime, int len) {
+/*
+*	wide char function
+*	parse given datatime as null-terminated string in format YYYY-MM-DD-HH-MM-SS
+*	returns parsed date time into given buffer of struct tm
+*/
+void parseDateTimeW(wchar_t* zTime, int len, struct tm* dateTime) {
 
     if (len < 20) {
-        return localtime(time(NULL));
+        return;
     };
 
     struct tm dateTime;
@@ -197,17 +221,7 @@ struct tm* parseDateTimeW(wchar_t* zTime, int len) {
     tmp += 3;
     zTime[19] = '\0';
     dateTime.tm_sec = wcstol(tmp, NULL, 10);
-
-    tmp += 3;
-
-    wchar_t sign = *tmp;
-    wchar_t* hrsStr = tmp + 1; hrsStr[2] = '\0';
-    wchar_t* minStr = tmp + 4;
-
-    int zHrs = wcstol(hrsStr, NULL, 10);
-    int zMin = wcstol(minStr, NULL, 10);
-
-    return &dateTime;
+	
 }
 
 void getUTCOffset(char* zTime, int len, int* hrs, int* min) {
@@ -353,13 +367,6 @@ int readFullFile(wchar_t** buffer, FILE* file) {
         ch = fgetc(file);
     }
 
-    /*
-    if ((fread(*buffer, sizeof(wchar_t), fsize / 2, file)) <= 0) {
-        fclose(file);
-        free(*buffer);
-        return -1;
-    }
-    */
     fclose(file);
 
     return fsize;

@@ -1,3 +1,12 @@
+/*
+	============================================================================================
+
+		Some functions and variables to handle requests, using wininet.h as all atempts
+		to do it via schanel failed.
+
+	============================================================================================
+*/
+
 #pragma once
 
 #include <windows.h>
@@ -32,7 +41,12 @@ int httpsGet(wchar_t* rootUrl, wchar_t* pathUrl, char** response) {
 
 
 
-// int ssl param should be either 0 or 1, 1 uses ssl, at least hope so, to connect to the server 
+/* 
+*	int ssl param should be either 0 or 1, 1 uses ssl, at least hope so, to connect to the server
+*	kind of get request
+*	returns negative values on error, lazy to write here all reasons...
+*	otherwise returns length of the request body in bytes
+*/
 int httpGetGeneric(wchar_t* rootUrl, wchar_t* pathUrl, char** response, int ssl) {
 
 	int PORT;

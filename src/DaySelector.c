@@ -1,3 +1,12 @@
+/*
+	============================================================================================
+
+		Basicly contains stuff to build struct DaySelector, which allows to add days and 
+		browrse them, assumes that had fixed first day and no gaps beetween first and last
+
+	============================================================================================
+*/
+
 #pragma once
 
 #include <wchar.h>
@@ -23,6 +32,9 @@ void setByDay(DaySelector* selector, int dayNumber);
 int selectDaySelector(DaySelector* daySelector, POINT* coords);
 int hoverDaySelector(DaySelector* daySelector, POINT* coords);
 
+/*
+*	kind of constructor
+*/
 DaySelector* newDaySelector(int x, int y, int width, int height, int tabCount, time_t startTime) {
 
 	DaySelector* daySelector = (DaySelector*) malloc(sizeof(DaySelector));
@@ -182,6 +194,10 @@ void drawDaySelector(DaySelector* daySelector) {
 
 }
 
+/*
+*	returns 0 if nothing useful happened
+*	returns 1 if any day was selected
+*/
 int selectDaySelector(DaySelector* daySelector, POINT* coords) {
 
 	if (daySelector == NULL) return 0;
@@ -201,6 +217,11 @@ int selectDaySelector(DaySelector* daySelector, POINT* coords) {
 
 }
 
+/*
+*	returns 0 if nothing useful happened
+*	returns 1 if mouse was over any button
+*	returns 2 if mouse wasn't over any scroll buttons
+*/
 int hoverDaySelector(DaySelector* daySelector, POINT* coords) {
 
 	if (daySelector == NULL) return 0;
@@ -252,6 +273,7 @@ int hoverDaySelector(DaySelector* daySelector, POINT* coords) {
 
 }
 
+/* CTRL + C | CTRL + V */
 int inBoudns(DayButton* button, POINT* coords) {
 
 	return 
@@ -329,7 +351,6 @@ void addDayTabDaySelector(DaySelector* selector) {
 
 	int modNumber = ((selector->days - 1) % itemsPerPage) + 1;
 
-	selector->days++;
 	selector->lastPage = selector->days / itemsPerPage;
 	selector->lastPage += (modNumber != itemsPerPage) ? 1 : 0;
 	selector->page = selector->lastPage;
@@ -370,10 +391,6 @@ void scroll(DaySelector* selector, int dir) {
 
 	adjustTabsVisibility(selector, modNumber);
 
-	wchar_t* msgbuf[256];
-	swprintf(msgbuf, 255, L"Selected: %i on Page: %i\n", ((dir < 0) ? modNumber : 1), selector->page);
-	OutputDebugStringW(msgbuf);
-
 	DayButton* button = selector->buttons + ((dir < 0) ? modNumber : 1);
 	button->select(selector, button);
 
@@ -396,10 +413,10 @@ void setByDay(DaySelector* selector, int dayNumber) {
 
 	adjustTabsVisibility(selector, idx);
 	
-	DayButton* button = selector->buttons + (idx);
+	DayButton* button = selector->buttons + idx;
 	button->select(selector, button);
 
-	selector->selected = dayNumber;
+	selector->selected = idx;
 
 }
 

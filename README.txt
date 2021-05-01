@@ -32,3 +32,10 @@ FILE FORMATS
   - files are downloading strictly from following link:
       https://covid19.who.int/who-data/vaccination-data.csv
     data format has to be corresponding with the files from this link
+
+
+
+LIBS
+
+source code requires zlib library to compile, library is included within source files.
+lib source: https://zlib.net/

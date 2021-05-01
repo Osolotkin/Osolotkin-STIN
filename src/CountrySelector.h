@@ -31,17 +31,21 @@ typedef struct CountrySelector {
 
 	int visible;
 
+	/* button that hiddes / reveals country selector */
 	ToggleButton* toggleButton;
 
 	wchar_t** countries;
 	int* countriesLengths;
 	int countriesCount;
 
+	/* buttons that represent countries allowed for selection */
 	SelectButton** selectButtons;
 	int buttonsCount;
 
+	/* number of selected country, min val 1, max val buttonsCount */
 	int selected;
 
+	/* struct that takes care about searching */
 	SearchHandler* searchHandler;
 
 	int (*select) (struct CountrySelector* selector, struct POINT* coords);

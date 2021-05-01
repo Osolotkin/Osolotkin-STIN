@@ -1,9 +1,9 @@
 It's source code of zlib library
 home page: https://zlib.net/
 
-Note, I did not wrtie any code, it's included just
-to made code compailing easier, to have all used 
-files in one place
+Note, I did not write any code, it's included just 
+to make code compiling easier, to have all used files 
+in one place
 
 Note, I may accidently lightly modifaied some lines 
 of it, while was browrsing it and looking for needed 

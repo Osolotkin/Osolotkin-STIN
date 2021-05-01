@@ -186,7 +186,7 @@ void parseDateTime(char* zTime, int len, struct tm* dateTime) {
 
 /*
 *	wide char function
-*	parse given datatime as null-terminated string in format YYYY-MM-DD-HH-MM-SS
+*	parse given datatime as null-terminated string in format YYYY-MM-DDTHH:MM:SS
 *	returns parsed date time into given buffer of struct tm
 */
 void parseDateTimeW(wchar_t* zTime, int len, struct tm* dateTime) {
@@ -224,6 +224,10 @@ void parseDateTimeW(wchar_t* zTime, int len, struct tm* dateTime) {
 	
 }
 
+/*
+*	parse datetime as null-terminated string in following format -> YYYY-MM-DDTHH:MM:SS+HH:MM
+*	returns the UTC time offset
+*/
 void getUTCOffset(char* zTime, int len, int* hrs, int* min) {
 
     if (len < 26) {
@@ -243,6 +247,9 @@ void getUTCOffset(char* zTime, int len, int* hrs, int* min) {
 
 }
 
+/*
+*	returns the UTC time offset of the local time
+*/
 void getLocalUTCOffset(int* hrs, int* min) {
 
     time_t now = time(NULL);
@@ -262,6 +269,9 @@ void getLocalUTCOffset(int* hrs, int* min) {
 
 }
 
+/*
+*	parse out from time_t value year, month and day
+*/
 void timeToDate(time_t* tm, int* y, int* m, int* d) {
 
     struct tm dateTime;
@@ -273,6 +283,10 @@ void timeToDate(time_t* tm, int* y, int* m, int* d) {
 
 }
 
+/*
+*	change the recieved time_t buffer to new value, that has 
+*	the reprsent same year, same month and same day, but it's 00:00:00 time
+*/
 void roundTimeToDay(time_t* tm) {
 
     struct tm dateTime;
@@ -288,10 +302,14 @@ void roundTimeToDay(time_t* tm) {
 
 }
 
+/*
+*	returns 1 if given struct tm points to today date
+*/
 int compareDateWithToday(struct tm* dateTime) {
 
     time_t nowTm = time(NULL);
-    struct tm nowDt = *localtime(nowTm);
+	struct tm nowDt;
+    localtime_s(&nowDt, nowTm);
 
     return (
         nowDt.tm_year == dateTime->tm_year &&
@@ -301,6 +319,9 @@ int compareDateWithToday(struct tm* dateTime) {
 
 }
 
+/*
+*	finds index of given char in given string
+*/
 int findArrayIdx(char* array, int arrLen, char ch, int offset) {
 
     for (int i = offset; i < arrLen; i++) {
@@ -315,6 +336,10 @@ int findArrayIdx(char* array, int arrLen, char ch, int offset) {
 
 }
 
+/*
+*	wide char function
+*	finds index of given char in given string
+*/
 int findArrayIdxW(wchar_t* array, int arrLen, wchar_t ch, int offset) {
 
     for (int i = offset; i < arrLen; i++) {
@@ -329,6 +354,9 @@ int findArrayIdxW(wchar_t* array, int arrLen, wchar_t ch, int offset) {
 
 }
 
+/*
+*	returns index of the most left non whitespaced char in given string
+*/
 int trimIdxLeft(char* str, int length) {
 
     for (int i = 0; i < length; i++) {
@@ -339,6 +367,9 @@ int trimIdxLeft(char* str, int length) {
 
 }
 
+/*
+*	returns index of the most right non whitespaced char in given string
+*/
 int trimIdxRight(char* str, int length) {
 
     for (int i = length - 1; i > -1; i--) {
@@ -349,6 +380,10 @@ int trimIdxRight(char* str, int length) {
 
 }
 
+/*
+*	reads full file into buffer it allocate and this buffer is returned via pointer back
+*	closes the given file pointer
+*/
 int readFullFile(wchar_t** buffer, FILE* file) {
 
     fseek(file, 0L, SEEK_END);
@@ -370,8 +405,13 @@ int readFullFile(wchar_t** buffer, FILE* file) {
     fclose(file);
 
     return fsize;
+
 }
 
+/*
+*	writes bytes/char buffer to the file
+*	meanwhile creates all necessary directories
+*/
 int writeFile(char* buffer, int bufferLen, char* fileName) {
 
     makeDir(fileName);
@@ -387,6 +427,9 @@ int writeFile(char* buffer, int bufferLen, char* fileName) {
 
 }
 
+/*
+*	recursively creates all neccesery dirs for given file name
+*/
 int makeDir(char* fileName) {
     
     int i = 0;

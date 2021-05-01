@@ -1,3 +1,13 @@
+/*
+	============================================================================================
+
+		Just button with callback function...
+
+	============================================================================================
+*/
+
+#pragma once
+
 #include "Config.h"
 #include "CallbackButton.h"
 #include "Render.h"
@@ -91,6 +101,11 @@ void drawCallbackButton(CallbackButton* button) {
 
 }
 
+/*
+*	returns 0 if nothing useful happend
+*	returns 1 if callback function was called and returned 0
+*	returns 2 if callback function was called and returned +
+*/
 int selectCallbackButton(CallbackButton* button, POINT* coords) {
 
 	if (!button->visible) return 0;
@@ -108,6 +123,11 @@ int selectCallbackButton(CallbackButton* button, POINT* coords) {
 
 }
 
+/*
+*	returns 0 if nothing useful happend
+*	returns 1 if mouse was over button
+*	returns 2 if mouse wasn't over button
+*/
 int hoverCallbackButton(CallbackButton* button, POINT* coords) {
 
 	if (!button->visible) return 0;

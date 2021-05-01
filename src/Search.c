@@ -1,3 +1,13 @@
+/*
+	============================================================================================
+
+		Basicly contains stuff to build struct SearchHandler, which allows to search given 
+		list of data using key inputs and select results by mouse, assumes alphabetical order
+		of given data
+
+	============================================================================================
+*/
+
 #pragma once
 
 #include <time.h>
@@ -23,6 +33,9 @@ clock_t cursorLastTime = 0;
 int cursorAnimLen = 500; /* ms */
 wchar_t cursor = CURSOR_VISIBLE;
 
+/*
+*	kind of constructor
+*/
 SearchHandler* newSearchHandler(wchar_t** data, int* dataLength, int dataCount, int x, int y, int width, int height, int results) {
 
 	int lineHg = height / (results + 1);
@@ -100,12 +113,12 @@ SearchHandler* newSearchHandler(wchar_t** data, int* dataLength, int dataCount, 
 	handler->x = x;
 	handler->y = y;
 	handler->width = width;
-	handler->height = height;//input->inpRect->height + resultsBox->height;
+	handler->height = height;
 	handler->input = input;
 	handler->resultsBox = resultsBox;
 	handler->data = data;
 	handler->dataCount = dataCount;
-	handler->dataLengths = dataLength; // make a copy
+	handler->dataLengths = dataLength; /* maybe make a copy */
 
 	handler->select = &selectSearchHandler;
 	handler->hover = &hoverSearchHandler;
@@ -226,7 +239,6 @@ void drawSearch(SearchHandler* search) {
 
 		strSz = strRect.width / charsPerLine;
 
-		//renderColor = WHITE;
 		stringWriter.write(
 			str,
 			strLen,
@@ -245,6 +257,10 @@ void drawSearch(SearchHandler* search) {
 
 }
 
+/*
+*	returns index of selected result
+*	if no reslut was selected returns -1
+*/
 int selectSearchHandler(SearchHandler* search, POINT* mouseCoords) {
 
 	search->input->hasFocus = search->input->inpRect->inBounds(search->input->inpRect, mouseCoords);
@@ -259,10 +275,9 @@ int selectSearchHandler(SearchHandler* search, POINT* mouseCoords) {
 		if (result->actvRect->inBounds(result->actvRect, mouseCoords)) {
 
 			search->resultsBox->selected = i;
-			/*
-			int resIdx = search->resultsBox->resultsOffset + i;
-			memcpy(search->input->buffer, search->data[resIdx], sizeof(wchar_t) * search->dataLengths[resIdx]);
-			search->input->length = search->dataLengths[resIdx];
+			/*	
+			*	assigment of selected result to input has to be 
+			*	managed outsde, as it was necessary for some reason
 			*/
 			return i;
 
@@ -282,6 +297,11 @@ void setInput(SearchHandler* search, int idx) {
 
 }
 
+/*
+*	returns 0 if nothing useful happened
+*	returns 1 if mouse was over results
+*	returns 2 if mouse was over input
+*/
 int hoverSearchHandler(SearchHandler* search, POINT* mouseCoords) {
 
 	int len = search->resultsBox->size;
@@ -344,6 +364,11 @@ void removeChar(SearchHandler* searchHandler) {
 
 }
 
+/*
+*	searches for results, assumes alphabetical order
+*	maybe somehow map data list would be better
+*	but havent came up with any good idea
+*/
 void search(SearchHandler* searchHandler) {
 
 	SearchInput* input = searchHandler->input;

@@ -1,14 +1,27 @@
+/*
+    ============================================================================================
+
+        Basicly contains stuff to build struct CountrySelector, that allows to search across
+        countries list, given as file, file format is specified in separate document 
+        README.txt, also creates struct SearchHandler, that is used to search list
+
+    ============================================================================================
+*/
+
 #pragma once
 
 #include <stdlib.h>
 #include "Config.h"
-#include "search.h"
+#include "Search.h"
 #include "Render.h"
 #include "CountrySelector.h"
 
 int selectCountry(CountrySelector* selector, POINT* coords); 
 int hoverCountrySelector(CountrySelector* selector, POINT* coords);
 
+/*
+*   kind of constructor
+*/
 CountrySelector* newCountrySelector(int* colors, int countriesToSelect, const char* countriesFile, int x, int y, int width, int height) {
 
     CountrySelector* selector = (CountrySelector*) malloc(sizeof(CountrySelector));
@@ -115,6 +128,9 @@ CountrySelector* newCountrySelector(int* colors, int countriesToSelect, const ch
 
 };
 
+/*
+*   just draw CountrySelector to the global pixel array
+*/
 void drawCountriesSelector(CountrySelector* selector) {
 
     ToggleButton* tgButt = selector->toggleButton;
@@ -160,6 +176,13 @@ void drawCountriesSelector(CountrySelector* selector) {
 
 }
 
+/*
+*   returns 0 if nothing useful happened
+*   returns 1 if selected country was changed
+*   returns 2 if other country was selected
+*   returns -1 if selector becomed hidden
+*   returns -2 if selector becomed visible
+*/
 int selectCountry(CountrySelector* selector, POINT* coords) {
 
     ToggleButton* tgButt = selector->toggleButton;
@@ -174,9 +197,9 @@ int selectCountry(CountrySelector* selector, POINT* coords) {
                 selector->countries[selector->selectButtons[selector->selected - 1]->selected]
             );
             selector->searchHandler->input->length = selector->countriesLengths[selector->selectButtons[selector->selected - 1]->selected];
+            
+            return -2;
         }
-
-        if (selector->visible) return -2;
     
     }
 
@@ -210,11 +233,6 @@ int selectCountry(CountrySelector* selector, POINT* coords) {
             
             selector->selected = i + 1;
             setInput(srch, selector->selectButtons[i]->selected - offset);
-            /*
-            selector->selected = i + 1;
-            wcscpy_s(srch->input->buffer, srch->input->maxLength, selector->countries[selector->selectButtons[i]->selected]);
-            srch->input->length = selector->countriesLengths[selector->selectButtons[i]->selected];
-            */
             return 2;
 
         }
@@ -225,6 +243,12 @@ int selectCountry(CountrySelector* selector, POINT* coords) {
 
 }
 
+/*
+*   returns 0 if nothing useful happened
+*   returns 1 - 9 are returns from SearchHandler, take a look at it documentation
+*   returns 10 if mouse was over toggle button
+*   returns 11 if mouse was over any country selection button
+*/
 int hoverCountrySelector(CountrySelector* selector, POINT* coords) {
 
     if (selector->visible == 1) {
@@ -253,6 +277,9 @@ int hoverCountrySelector(CountrySelector* selector, POINT* coords) {
 
 }
 
+/*
+*   returns 1 if success, otherwise 0
+*/
 int loadCountries(CountrySelector* selector, char* fileName) {
 
     FILE* file;
@@ -289,7 +316,8 @@ int loadCountries(CountrySelector* selector, char* fileName) {
         if (buffer[i] == L'\n') {
 
             buffer[i] = L'\0';
-            selector->selectButtons[cnt]->selected = wcstol((wchar_t*) buffer + start, NULL, 10);
+            selector->selectButtons[cnt]->selected = wcstol((wchar_t*) buffer + start, NULL, 10) - 1;
+            if (selector->selectButtons[cnt]->selected < 0) return 1;
             
             start = i + 1;
             if (cnt >= 3) break;
@@ -330,6 +358,7 @@ int loadCountries(CountrySelector* selector, char* fileName) {
                 free(buffer);
 
                 return 1;
+
             }
 
             memcpy(selector->countries[lineIdx], buffer + lineStart, sizeof(wchar_t) * len);

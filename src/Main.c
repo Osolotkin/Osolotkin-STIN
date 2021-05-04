@@ -78,6 +78,7 @@
 
 /*
 *   file where list of countries is stored, starts with number of countries it consists of 
+*	then comes indexes of coutnries that has to be default selected each on separate line
 *   and after come countries names each on separate line
 */
 #define COUNTRIES_FILE "Countries.txt"

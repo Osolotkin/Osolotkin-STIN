@@ -27,6 +27,9 @@
 #include "CallbackButton.h"
 #include "Config.h"
 
+#define ICON_PATH L"icon.ico"
+#define ICON_SIZE 256
+
 /* max value that can present 4 bytes long signed int */
 #define INT_MAX 2147483647
 
@@ -58,10 +61,10 @@
 *   comparasion data file format:
 * 
 *   file starts with date of the first day in following format:
-*   int32 - seconds from 1970 i guess
+*   int64 - seconds from 1970 i guess
 *
 *   afterwards comming comparasion data in folowing format, each one represented as int32:
-*   czech increase, czech total, czech time diff, world increase, world total, world time diff
+*   czech increase, world increase, czech total, world total, czech time diff, world time diff
 */
 #define COMPARASION_DATA_SAVE_FILE "saves/comparasion_data.save"
 
@@ -98,7 +101,7 @@ typedef struct CompDataBuffer {
 typedef struct tm LocalDateTime;
 
 const LPCWSTR CLASS_NAME = L"Class_Name";
-const LPCWSTR WINDOW_TITLE = L"Test_Window";
+const LPCWSTR WINDOW_TITLE = L"Program";
 
 /* thread to collect data and process them while not disturbing gui thread */
 HANDLE dataCollectingThread;
@@ -178,8 +181,26 @@ int vaccinationDataViewType;
 
 HANDLE ghMutex;
 
-int windowWidth = SCREEN_WIDTH;
-int windowHeight = SCREEN_HEIGHT;
+int windowWidth;
+int windowHeight;
+
+enum ExitErrors {
+
+    EE_MALLOC_ERROR,
+    EE_WRONG_FILE_FORMAT,
+    EE_CRITICAL_ERROR,
+    EE_WIN_32_ERROR
+
+};
+
+const wchar_t* EXIT_ERRORS[] = {
+
+    L"MALLOC_ERROR",
+    L"WRONG_FILE_FORMAT",
+    L"CRITICAL_ERROR",
+    L"WIN_32_ERROR"
+
+};
 
 int loadCzechData();
 int loadWorldData();
@@ -205,6 +226,8 @@ void fillNewDay(CompDataBuffer* dataBufferCz, CompDataBuffer* dataBufferWd);
 int requestButtonCallback();
 VOID CALLBACK drawRequestError(HWND hwnd, UINT msg, UINT_PTR timerId, DWORD millis);
 
+void scaleMouseCoords(POINT* coords);
+
 void switchMainError(enum errorMessage error);
 
 int exitWithError(const wchar_t* msg);
@@ -212,6 +235,10 @@ int showError(const wchar_t* msg);
 
 
 
+/*
+*   transform mouse coords, that are assumed as coords of client area, to the actual
+*   coords of active part of the window
+*/
 void scaleMouseCoords(POINT* coords) {
 
     if (SCREEN_HEIGHT * windowWidth > SCREEN_WIDTH * windowHeight) {
@@ -560,7 +587,10 @@ int WINAPI WinMain(
     int cmdShow
 ) {
 
-    // registering the Window Class
+    /* first of try to load config data from file */
+    loadConfig();
+
+    /* registering the Window Class */
     WNDCLASSEX winClass;
 
     winClass.cbSize = sizeof(WNDCLASSEX);
@@ -569,21 +599,23 @@ int WINAPI WinMain(
     winClass.cbClsExtra = 0;
     winClass.cbWndExtra = 0;
     winClass.hInstance = instance;
-    winClass.hIcon = LoadIcon(NULL, IDI_APPLICATION);
     winClass.hCursor = LoadCursor(NULL, IDC_ARROW);
     winClass.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
     winClass.lpszMenuName = NULL;
     winClass.lpszClassName = CLASS_NAME;
-    winClass.hIconSm = LoadIcon(NULL, IDI_APPLICATION);
+    winClass.hIconSm = LoadImage(NULL, ICON_PATH, IMAGE_ICON, ICON_SIZE, ICON_SIZE, LR_LOADFROMFILE);
+    winClass.hIcon = LoadImage(NULL, ICON_PATH, IMAGE_ICON, ICON_SIZE, ICON_SIZE, LR_LOADFROMFILE);
+
+    int xxxx = GetLastError();
 
     if (!RegisterClassEx(&winClass)) {
 
-        exitWithError(L"Window Creation Failed!");
+        exitWithError(L"Window Creation Failed!", EE_WIN_32_ERROR);
         return 0;
 
     }
 
-    // creating the Window
+    /* creating the Window */
     HWND hwnd;
 
     DWORD styleFlags = WS_OVERLAPPEDWINDOW ^ WS_SIZEBOX;
@@ -591,7 +623,7 @@ int WINAPI WinMain(
     RECT winRect = { 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT };
     if (AdjustWindowRectEx(&winRect, styleFlags, 0, WS_EX_CLIENTEDGE) == 0) {
 
-        exitWithError(L"Window Creation Failed!");
+        exitWithError(L"Window Creation Failed!", EE_WIN_32_ERROR);
         return 2;
 
     }
@@ -615,10 +647,13 @@ int WINAPI WinMain(
 
     if (hwnd == NULL) {
 
-        exitWithError(L"Window Creation Failed!");
+        exitWithError(L"Window Creation Failed!", EE_WIN_32_ERROR);
         return 0;
 
     }
+
+    windowWidth = SCREEN_WIDTH;
+    windowHeight = SCREEN_HEIGHT;
 
     defaultCursor = LoadCursor(NULL, IDC_ARROW);
     actionCursor = LoadCursor(NULL, IDC_HAND);
@@ -648,7 +683,7 @@ int WINAPI WinMain(
         daysAllocated = DAYS_TO_ADD_AT_EXPANSION;
         comparisonData = (int*)malloc(sizeof(int) * daysAllocated);
         if (comparisonData == NULL) {
-            exitWithError(L"Could not allocate memory while preparing data!\n [malloc error]");
+            exitWithError(L"Could not allocate memory while preparing data!", EE_MALLOC_ERROR);
         }
 
         lastDay = 0;
@@ -671,25 +706,14 @@ int WINAPI WinMain(
             goto loadingEnd;
         }
 
-        /*
-        if (saveComparasionData(comparisonData)) {
-            showError(L"[fopen error]\nCould not save data to file, suggesting restart the app and make sure all necessary files/paths have write permission!");
-            goto loadingEnd;
-        }
-        */
     } else if (missedDaysCount > 1) {
         /* there are some days without data, have to resave internal file with all current data to make it trully valid */
         
         saveComparasionDataFull(comparisonData + (lastDay - missedDaysCount) * 6, missedDaysCount - 1);
-        lastDay;
-    
-    } else if (missedDaysCount == 1) {
-
-        lastDay;
     
     } else {
 
-        successLoad = 1;
+        successLoad = (missedDaysCount) ? 0 : 1;
     
     }
 
@@ -708,7 +732,7 @@ loadingEnd:;
 
     daySelector = newDaySelector(dsX, dsY, dsWidth, dsHeight, dsTabCount, firstDayTime);
     if (daySelector == NULL) {
-        exitWithError(L"[malloc error]\nCould not allocate enough memory to build daySelector!");
+        exitWithError(L"Could not allocate enough memory to build daySelector!", EE_CRITICAL_ERROR);
     }
 
     daySelector->setByDay(daySelector, lastDay + 1);
@@ -726,7 +750,7 @@ loadingEnd:;
     int results = 4;
 
     countrySelector = newCountrySelector(
-        graphColors + 1,
+        GRAPH_COLORS + 1,
         COUNTRIES_TO_SELECT,
         COUNTRIES_FILE,
         csX,
@@ -736,7 +760,7 @@ loadingEnd:;
     );
 
     if (countrySelector == NULL) {
-        exitWithError(L"[malloc error]\nCould not allocate enough memory to build countrySelector!");
+        exitWithError(L"Could not allocate enough memory to build countrySelector!\nOR\nFile format of 'Countries.txt' is invalid!", EE_MALLOC_ERROR);
     }
 
     int btWidth = width / 4;
@@ -759,7 +783,7 @@ loadingEnd:;
     );
     
     if (requestButton == NULL) {
-        exitWithError(L"[malloc error]\nCould not allocate enough memory to build requestButton!");
+        exitWithError(L"Could not allocate enough memory to build requestButton!", EE_MALLOC_ERROR);
     }
 
     switchMainError((enum errorMessage) EM_NO_DATA_FOR_THE_MOMENT);
@@ -779,7 +803,7 @@ loadingEnd:;
     );
 
     if (ghMutex == NULL) {
-        exitWithError(L"Mutex Creation Failed!");
+        exitWithError(L"Mutex Creation Failed!", EE_CRITICAL_ERROR);
         return 0;
     }
 
@@ -977,7 +1001,7 @@ int saveComparasionDataFull(int* pData, int days) {
 */
 int loadPreviousSession() {
 
-    /* reading comparasion data from saved file if exists*/
+    /* reading comparasion data from saved file if exists */
 
     firstDayTime = 0;
 
@@ -1038,6 +1062,8 @@ int loadPreviousSession() {
     
     }
 
+    fclose(cmpFile);
+
     if (i >= days) {
         return 0;
     }
@@ -1090,9 +1116,6 @@ int loadCzechData(CompDataBuffer* dataBuffer) {
     int bDate = 1;
     int bDailyIncrease = 1;
     int bSickCount = 1;
-
-    //time_t currentTime = time(NULL);
-    //LocalDateTime localDateTime = *localtime(&currentTime);
 
     int increase = 0;
     int total = 0;
@@ -1455,18 +1478,15 @@ loadDataAsRequest: ;
     
     }
 
-    /*  for now using lib, it works somehow, but has to be rewritten
-    *   to something own, but have no time and need to contiune to do other stuff
+    /*  
+    *   for now using lib, it works somehow
     */
     int ret;
     int unzippedResponseLen = 50000;
+    /* allocated on heap as it seems like big buffer for stack, or at least vs studio told me so */
     unsigned char* unzippedResponse = (char*) malloc(sizeof(char) * unzippedResponseLen);
     if (unzippedResponse == NULL) {
-        
-        vaccinationData[0] = -2;
-        free(response);
-        return 1;
-    
+        goto zlibCleanup;
     }
 
     z_stream infstream;
@@ -1481,17 +1501,17 @@ loadDataAsRequest: ;
 
     ret = inflateInit2(&infstream, 16 + MAX_WBITS);
     if (ret != 0) {
-        // do something
+        goto zlibCleanup;
     }
 
     ret = inflate(&infstream, Z_FINISH);
     if (ret != 1) {
-        // do something
+        goto zlibCleanup;
     }
 
     ret = inflateEnd(&infstream);
     if (ret != 0) {
-        // do something
+        goto zlibCleanup;
     }
 
     csvDataLen = infstream.total_out;
@@ -1520,8 +1540,6 @@ processData: ;
         csvDataLen,
         COMMA
     };
-
-    const int CZECHIA_INDEX = 36;
 
     wchar_t** countries = countrySelector->countries;
     int* countriesLengths = countrySelector->countriesLengths;
@@ -1565,6 +1583,12 @@ processData: ;
     }
 
     return 0;
+
+zlibCleanup:
+
+    vaccinationData[0] = -2;
+    free(response);
+    return 1;
 
 }
 
@@ -1653,6 +1677,10 @@ void fillNewDay(CompDataBuffer* dataBufferCz, CompDataBuffer* dataBufferWd) {
 
 }
 
+/*
+*   assynchronusly traies to download data
+*   hope these mutex magic works somehow
+*/
 int requestButtonCallback() {
     
     DWORD dwWaitResult = WaitForSingleObject(
@@ -1819,7 +1847,7 @@ void drawComparisonData(int day, int type) {
                     titles[i],
                     titlesLengths[i],
                     data,
-                    graphColors,
+                    GRAPH_COLORS,
                     dataLength
                 };
 
@@ -1853,7 +1881,7 @@ void drawComparisonData(int day, int type) {
                 legendNamesLengths,
                 titlesCount,
                 strSz,
-                graphColors,
+                GRAPH_COLORS,
                 x,
                 y,
                 width,
@@ -2020,7 +2048,6 @@ void drawVaccineComparasion(int day, int type) {
         free it latter, if it could be done another way, but has to be changed latter, if
         count of displayable countries will grow
     */
-    const int CZECHIA_INDEX = 36;
 
     wchar_t** countries = countrySelector->countries;
     int* countriesLengths = countrySelector->countriesLengths;
@@ -2056,7 +2083,7 @@ void drawVaccineComparasion(int day, int type) {
                 title,
                 titleLength,
                 vaccinationData,
-                graphColors,
+                GRAPH_COLORS,
                 countrySelector->buttonsCount + 1
             };
 
@@ -2075,7 +2102,7 @@ void drawVaccineComparasion(int day, int type) {
                 countriesNamesLengths,
                 titlesCount,
                 strSz,
-                graphColors,
+                GRAPH_COLORS,
                 countrySelector->x,
                 countrySelector->y,
                 countrySelector->width,
@@ -2137,7 +2164,7 @@ void drawVaccineComparasion(int day, int type) {
 
                 strRect.y = y;
 
-                renderColor = graphColors[i];
+                renderColor = GRAPH_COLORS[i];
                 strRect.x = x;
                 strRect.width = leftWd;
                 lStringWriter.write(countriesNames[i], countriesNamesLengths[i], COLOR_MAIN_BACK, strSz, &strRect);
@@ -2163,7 +2190,7 @@ void drawVaccineComparasion(int day, int type) {
                 L"TITLE",
                 5,
                 vaccinationData,
-                graphColors,
+                GRAPH_COLORS,
                 countrySelector->buttonsCount + 1
             };
 
@@ -2184,6 +2211,7 @@ void drawVaccineComparasion(int day, int type) {
 
 }
 
+/* CTRL + C | CTRL + V */
 void drawNoDataError(int x, int y, int width, int height) {
 
     renderColor = COLOR_ERROR;
@@ -2212,8 +2240,9 @@ void drawErrorMessage(int x, int y, int width, int height) {
 
 }
 
-int exitWithError(const wchar_t* msg) {
-    MessageBox(NULL, msg, L"Critical Error!", MB_ICONEXCLAMATION | MB_OK | MB_DEFAULT_DESKTOP_ONLY);
+int exitWithError(const wchar_t* msg, enum ExitErrors err) {
+    
+    MessageBox(NULL, msg, EXIT_ERRORS[err], MB_ICONEXCLAMATION | MB_OK | MB_DEFAULT_DESKTOP_ONLY);
     exit(1);
 }
 

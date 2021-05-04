@@ -154,6 +154,8 @@ int backwardCompareW(wchar_t* text, int tLen, wchar_t* pattern, int pLen, int of
 void parseDateTime(char* zTime, int len, struct tm* dateTime) {
 
     if (len < 20) {
+        time_t now = time(NULL);
+        localtime_s(&dateTime, &now);
         return;
     };
 
@@ -192,6 +194,8 @@ void parseDateTime(char* zTime, int len, struct tm* dateTime) {
 void parseDateTimeW(wchar_t* zTime, int len, struct tm* dateTime) {
 
     if (len < 20) {
+        time_t now = time(NULL);
+        localtime_s(&dateTime, &now);
         return;
     };
 
@@ -254,7 +258,9 @@ void getLocalUTCOffset(int* hrs, int* min) {
 
     time_t now = time(NULL);
 
-    struct tm hereDT = *localtime(&now);
+	struct tm hereDT;
+    localtime_s(&hereDT, &now);
+	
     int hereHrs = hereDT.tm_hour;
     int hereMin = hereDT.tm_min;
 
@@ -264,8 +270,6 @@ void getLocalUTCOffset(int* hrs, int* min) {
 
     *hrs = (hereHrs - utcHrs);
     *min = (hereMin - utcMin);
-
-    return;
 
 }
 
@@ -297,8 +301,6 @@ void roundTimeToDay(time_t* tm) {
     dateTime.tm_sec = 0;
 
     *tm = mktime(&dateTime);
-
-    return;
 
 }
 

@@ -1,4 +1,4 @@
-*
+/*
     ============================================================================================
 
         Supposed to be filled with various functions that has to do something along with

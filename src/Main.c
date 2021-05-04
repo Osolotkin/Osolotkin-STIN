@@ -115,11 +115,11 @@ SearchHandler searchHandler = {0};
 /* has to be day rounded */
 time_t firstDayTime;
 
-/* 0 to 364 */
-int lastDay = 0;
-
 /* has to be poitive multiple of DAYS_TO_ADD_AT_EXPANSION */
 int daysAllocated = 0;
+
+/* 0 to daysAllocated - 1 */
+int lastDay = 0;
 
 /* 
 *   stored data format:
@@ -134,14 +134,6 @@ int* comparisonData;
 
 CompDataBuffer sCompDataBufferCz = { 0 };
 CompDataBuffer sCompDataBufferWd = { 0 };
-
-Color countriesColors[COUNTRIES_TO_SELECT + 1] = {
-        HEX_6B9CE2,
-        HEX_29A88D,
-        HEX_B64A63,
-        HEX_F2BA44,
-        HEX_494B8A
-};
 
 /*
 *   0 -> allways Czechia

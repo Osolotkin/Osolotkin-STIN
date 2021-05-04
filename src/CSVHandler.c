@@ -17,7 +17,7 @@
 
 /* 
 *   csv data will be modified
-*   if succeed, return buffer first dim is surely allocated
+*   if succeed, returns buffer first dim is surely allocated
 *   basically finds various attributes for various keys, look at the CSVSearchHandler definition
 *   not really tested
 */
